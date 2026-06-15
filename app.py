@@ -42,26 +42,47 @@ with app.app_context():
 
 @app.route('/')
 def home():
+
     if 'user_id' not in session:
         return redirect('/login')
 
     search = request.args.get('search')
     filter_type = request.args.get('filter')
 
-    tasks_query = Task.query.filter_by(user_id=session['user_id'])
+    tasks_query = Task.query.filter_by(
+        user_id=session['user_id']
+    )
 
     if search:
-        tasks_query = tasks_query.filter(Task.title.contains(search))
+        tasks_query = tasks_query.filter(
+            Task.title.contains(search)
+        )
 
     if filter_type == "completed":
-        tasks_query = tasks_query.filter_by(completed=True)
+        tasks_query = tasks_query.filter_by(
+            completed=True
+        )
+
     elif filter_type == "pending":
-        tasks_query = tasks_query.filter_by(completed=False)
+        tasks_query = tasks_query.filter_by(
+            completed=False
+        )
 
     tasks = tasks_query.all()
 
-    return render_template('index.html', tasks=tasks)
+    total_tasks = len(tasks)
+    completed_tasks = len(
+        [t for t in tasks if t.completed]
+    )
+    pending_tasks = total_tasks - completed_tasks
 
+    return render_template(
+        "index.html",
+        tasks=tasks,
+        total_tasks=total_tasks,
+        completed_tasks=completed_tasks,
+        pending_tasks=pending_tasks
+    )
 # ---------------- ADD TASK ---------------- #
 @app.route('/add', methods=['POST'])
 def add_task():
